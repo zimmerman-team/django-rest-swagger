@@ -8,6 +8,7 @@ from rest_framework import status
 import simplejson as json
 
 from .settings import swagger_settings as settings
+from django.conf import settings as django_settings
 
 
 class OpenAPICodec(_OpenAPICodec):
@@ -52,6 +53,12 @@ class SwaggerUIRenderer(BaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         self.set_context(data, renderer_context)
+        
+        # Patch bug on the HTTPS schemes
+        spec = json.loads(renderer_context['spec'])
+        spec['schemes'] = django_settings.SWAGGER_SCHEMES
+        renderer_context['spec'] = json.dumps(spec)
+        
         return render(
             renderer_context['request'],
             self.template,
